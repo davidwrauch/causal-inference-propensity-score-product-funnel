@@ -140,7 +140,7 @@ This is a simple example, but the pattern is very real.
 
 ## Note on data
 
-The dataset used here is synthetic and designed to mirror the structure and behavior of the original problem.
+The dataset stored here in Github is synthetic and designed to mirror the structure and behavior of the original problem.
 
 In the real analysis, data came from clickstream logs and internal product metrics. Since that data can’t be shared, I generated a synthetic version that preserves:
 
