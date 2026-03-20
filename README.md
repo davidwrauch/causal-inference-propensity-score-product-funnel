@@ -138,6 +138,20 @@ This is a simple example, but the pattern is very real.
 
 ---
 
+## Note on data
+
+The dataset used here is synthetic and designed to mirror the structure and behavior of the original problem.
+
+In the real analysis, data came from clickstream logs and internal product metrics. Since that data can’t be shared, I generated a synthetic version that preserves:
+
+* the same feature structure (user/device/home characteristics)
+* similar distributions (skewed revenue, conversion rates, etc.)
+* the key pattern of interest (selection bias before matching, reduced differences after matching)
+
+This makes the analysis reproducible while keeping the focus on the modeling and decision-making rather than the specific data.
+
+---
+
 ## How to run
 
 ### Python
