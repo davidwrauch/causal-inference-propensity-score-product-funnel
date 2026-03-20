@@ -7,6 +7,21 @@ Many product analytics questions are really causal questions. For example, if us
 
 This project applies propensity score matching to separate correlation from causation in a product funnel. The analysis evaluates whether clicking a link in a tech company application funnel actually improves downstream revenue per applicant (RPA), or whether the apparent effect is driven by selection bias.
 
+What this is
+
+This project looks at causal impact in a product funnel using propensity score matching, implemented in both **R and Python**.
+
+The goal was to understand whether users who click a link actually perform better, or whether those users were already more likely to convert in the first place.
+
+I built the analysis in both languages to:
+
+* sanity check results across implementations
+* better understand how matching behaves in practice
+* highlight differences in defaults and workflows between R and Python
+
+The overall conclusion is that while there appears to be a strong effect before matching, that difference largely disappears after adjusting for user characteristics.
+
+
 Approach
 
 Users who clicked the link are matched with similar users who did not click the link using k-nearest neighbor matching based on observable characteristics such as time period and user attributes. This creates a control group of users who are as similar as possible to the treated users except for the link click itself.
