@@ -1,53 +1,178 @@
-Causal inference: does clicking a funnel link actually increase conversion?
+# Causal Inference in a Product Funnel (Propensity Score Matching in R & Python)
 
-TLDR;
-Users who clicked the link appeared to convert better, but after matching them to similar users who did not click the link, the difference disappeared. The higher conversion rate was driven by who clicked the link, not the link itself.
+## TL;DR
 
-Many product analytics questions are really causal questions. For example, if users who click a help link in a funnel convert at higher rates, does that mean the link improves conversion, or does it simply attract users who were already more motivated?
+* Users who clicked a new feature looked more valuable at first (higher revenue per user)
+* After matching similar users, that effect disappeared
+* The difference was driven by *who clicked*, not the feature itself
+* In practice, this would have led to a bad rollout decision
 
-This project applies propensity score matching to separate correlation from causation in a product funnel. The analysis evaluates whether clicking a link in a tech company application funnel actually improves downstream revenue per applicant (RPA), or whether the apparent effect is driven by selection bias.
+Main takeaway: don’t trust raw A/B comparisons when users self-select into treatment.
 
-What this is
+---
 
-This project looks at causal impact in a product funnel using propensity score matching, implemented in both **R and Python**.
+## What this is
 
-The goal was to understand whether users who click a link actually perform better, or whether those users were already more likely to convert in the first place.
+This project looks at a pretty common product question:
 
-I built the analysis in both languages to:
+> “Did this feature actually improve outcomes, or are better users just more likely to use it?”
 
-* sanity check results across implementations
-* better understand how matching behaves in practice
-* highlight differences in defaults and workflows between R and Python
+I used propensity score matching to try to separate those two things.
 
-The overall conclusion is that while there appears to be a strong effect before matching, that difference largely disappears after adjusting for user characteristics.
+The same analysis is implemented in both **R and Python** — partly to sanity check results, and partly to understand how the workflows differ.
 
+---
 
-Approach
+## Real-world context
 
-Users who clicked the link are matched with similar users who did not click the link using k-nearest neighbor matching based on observable characteristics such as time period and user attributes. This creates a control group of users who are as similar as possible to the treated users except for the link click itself.
+This is based on a real A/B test I worked on.
 
-Once matched pairs are created, the outcome metric (revenue per applicant) is compared between the two groups to estimate the causal impact of the link.
+A new feature was shown to ~10% of users. Within that group, users could choose whether to engage with it.
 
-This approach helps avoid a common mistake in funnel analysis: comparing treated users to the entire population, which violates the assumption that the groups are comparable.
+Initial results looked promising:
 
-Results
+* users who engaged had higher revenue per user
 
-A naive comparison suggests that users who click the link have higher revenue per applicant. However, after matching similar users with and without the link click, the difference disappears and is no longer statistically significant.
+That led to a proposal to roll the feature out more broadly.
 
-In other words, the observed relationship appears to be selection bias, not a causal effect.
+The issue was that engagement wasn’t random — the users choosing to click were different to begin with.
 
-Product implication
+Using statistical matching, I compared those users to similar users who didn’t engage.
 
-The link introduces substantial drop-off in the funnel but does not appear to improve downstream outcomes once user characteristics are controlled for. Based on this analysis, the link likely adds friction without providing measurable benefit and could reasonably be removed or redesigned.
+After matching:
 
-Why this project matters
+* the revenue lift disappeared
+* in some cases, similar non-clickers performed better
 
-This example illustrates a common analytics problem: behavioral signals in product funnels are often confounded by differences in user motivation. Matching methods such as propensity score analysis allow product teams to estimate causal effects even when randomized experiments are not available.
+So the original result was mostly selection bias.
 
-The same approach can be applied to questions such as:
+Because of that, the rollout was delayed and the feature continued as a test. Conversion rates improved later, and the feature was rolled out in a better state.
 
-whether specific onboarding steps improve retention
+---
 
-whether certain marketing channels truly drive higher-value users
+## Data + setup
 
-whether feature usage predicts better outcomes or simply reflects user intent
+Simulated version of a product funnel dataset with:
+
+* user attributes (device, visit type, property characteristics, etc.)
+* behavioral outcomes (revenue, clicks, conversion flags)
+
+In the original work:
+
+* data came from SQL (clickstream level)
+* modeling was done in R
+* results were shared in Tableau
+
+This repo recreates that workflow in both R and Python.
+
+---
+
+## Approach
+
+High level:
+
+1. Combine users who clicked the feature and those who didn’t
+2. Estimate a propensity score (probability of clicking) based on user characteristics
+3. Match users with similar scores across groups
+4. Recompare outcomes after matching
+
+The goal is to approximate:
+
+> “What would have happened if these same users had *not* clicked?”
+
+---
+
+## What I saw
+
+Before matching:
+
+* clickers had higher revenue per user
+* looked like a clear win
+
+After matching:
+
+* differences were much smaller
+* often not statistically significant
+
+So:
+
+* the feature itself wasn’t driving the outcome
+* user selection was
+
+---
+
+## R vs Python
+
+I implemented the same idea in both:
+
+* **R**: `MatchIt`, more direct matching workflow
+* **Python**: logistic regression + nearest-neighbor matching
+
+Results were broadly consistent, but the workflow is definitely smoother in R for this type of problem.
+
+---
+
+## Why this matters
+
+This comes up all the time in product work:
+
+* features that look good because power users adopt them
+* misleading “uplift” from non-random behavior
+* pressure to ship based on early metrics
+
+This is a simple example, but the pattern is very real.
+
+---
+
+## Repo structure
+
+```text
+.
+├── r/
+│   └── causal_matching.R
+├── python/
+│   └── causal_matching.py
+├── data/
+│   └── (simulated csvs)
+```
+
+---
+
+## How to run
+
+### Python
+
+```bash
+conda activate classification
+python causal_matching.py
+```
+
+### R
+
+Run the script in RStudio:
+
+```r
+source("causal_matching.R")
+```
+
+---
+
+## Takeaway
+
+For problems like this:
+
+* raw comparisons can be misleading
+* matching / causal methods help sanity check results
+* model choice matters less than *how you frame the question*
+
+If I saw this in production again, I’d treat early uplift from opt-in behavior pretty skeptically until I could control for who is opting in.
+
+---
+
+## If I kept going
+
+* use doubly robust methods / causal forests
+* test sensitivity to different matching strategies
+* run the same analysis on a larger dataset
+
+---
